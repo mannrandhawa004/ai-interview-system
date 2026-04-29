@@ -1,24 +1,18 @@
+import asyncHandler from "../../utils/asyncHandler.js"
+import ApiResponse from "../../utils/ApiResponse.js"
+import { BadRequestError } from "../../utils/AppError.js"
 import { parseResumeAI } from "../../services/ai.service.js"
 
-export const uploadResume = async (req, res) => {
-  try {
-    return res.json({
-      message: "Resume uploaded",
-      filePath: req.file.path
-    })
-  } catch (err) {
-    res.status(500).json({ error: err.message })
+export const uploadAndParseResume = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw new BadRequestError("Resume file is required")
   }
-}
 
-export const parseResume = async (req, res) => {
-  try {
-    const { filePath } = req.body
+  const filePath = req.file.path
 
-    const data = await parseResumeAI(filePath)
+  const parsedData = await parseResumeAI(filePath)
 
-    res.json(data)
-  } catch (err) {
-    res.status(500).json({ error: err.message })
-  }
-}
+  const response = new ApiResponse(res)
+
+  return response.success(parsedData, "Resume parsed successfully")
+})
